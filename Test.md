@@ -1,5 +1,5 @@
 This is the histogram of the total number of steps taken each day
-```{r}
+```{r, echo=FALSE}
 data <-read.csv("./activity/activity.csv")
 library(plyr);library(dplyr)
 library(tidyr)
@@ -13,7 +13,7 @@ hist(dat2$sum, xlab="Total number of steps taken per day", main="")
 ```
 
 This is mean of steps taken each day
-```{r}
+```{r, echo=FALSE}
 data <-read.csv("./activity/activity.csv")
 library(plyr);library(dplyr)
 library(tidyr)
@@ -27,7 +27,7 @@ dat2$mean <- apply(dat,1,mean)
 ```
 
 This is median number of steps taken each day
-```{r}
+```{r, echo=FALSE}
 data <-read.csv("./activity/activity.csv")
 library(plyr);library(dplyr)
 library(tidyr)
