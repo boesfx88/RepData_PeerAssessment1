@@ -7,19 +7,96 @@ output:
 
 
 ## Loading and preprocessing the data
+This is the code for loading the data.
+```{r, cache=TRUE}
+data <-read.csv("activity.csv")
+```
 
+This is the code for processing the data.
+```{r, cache=TRUE}
+library(plyr);library(dplyr)
+library(tidyr)
+dat <-spread(data,interval,steps)
+row.names(dat) <- dat[,1]
+dat$date <- NULL
+```
 
 
 ## What is mean total number of steps taken per day?
-
+This is sum, mean and median of steps taken each day.
+```{r}
+dat2 <- dat
+dat2$sum <- apply(dat,1,sum)
+dat2$mean <- apply(dat,1,mean)
+dat2$median <- apply(dat,1,median)
+dat2[,which(names(dat2)=="sum"|names(dat2)=="mean"|names(dat2)=="median")]
+```
 
 
 ## What is the average daily activity pattern?
+The time series plot of the 5-minute interval (x-axis) and the average number of steps taken, averaged across all days (y-axis)
+```{r, cache=TRUE, warning=FALSE}
+dat3 <- data.frame(t(dat))
+rownames(dat3) <- names(dat)
+names(dat3) <- rownames(dat)
+dat3$mean <- apply(dat3,1,function (x) {mean(x,na.rm=TRUE)})
+plot(x=(0:287)*25/3, y=dat3$mean, type="l",xlab="interval",ylab="mean of steps taken")
+```
 
+The 5-minute interval, on average across all the days in the dataset, contains the maximum number of steps.
+```{r}
+as.numeric(rownames(dat3)[which(dat3$mean==max(dat3$mean))])
+```
 
 
 ## Imputing missing values
+The number of days with missing data
+```{r}
+missing <- which(is.na(dat[,1]))
+sum(is.na(dat[,1]))
+```
 
+Let's fill the missing data with mean of respective 5 minutes interval.
+```{r}
+new_dat <- dat
+new_dat[missing,] <- rep(dat3$mean,each=length(missing))
+```
+
+This is the histogram of the total number of steps taken each day from the new data set.
+```{r}
+new_dat2 <- new_dat
+new_dat2$sum <- apply(new_dat,1,sum)
+hist(new_dat2$sum, xlab="Total number of steps taken per day", main="")
+```
+
+This is mean and median of steps taken each day from the new data set.
+```{r}
+new_dat2$mean <- apply(new_dat,1,mean)
+new_dat2$median <- apply(new_dat,1,median)
+new_dat2[,which(names(new_dat2)=="mean"|names(new_dat2)=="median")]
+```
+
+Because of the way we fill the missing data, the mean and median for the previously missing day is all the same. And medians for the new data are no longer all zero.
 
 
 ## Are there differences in activity patterns between weekdays and weekends?
+```{r, warning=FALSE}
+library(lattice)
+new_dat3 <- new_dat
+new_dat3$factor <- rep(c(rep("weekday",5),rep("weekend",2)),length.out=61)
+
+
+new_dat_wd<- data.frame(t(subset(new_dat3, factor == "weekday",select = -factor)))
+new_dat_we<- data.frame(t(subset(new_dat3, factor == "weekend",select = -factor)))
+new_dat_wd$mean <- apply(new_dat_wd,1,mean)
+new_dat_we$mean <- apply(new_dat_we,1,mean)
+
+new_dat4 <- aggregate(new_dat3[,-289],by=list(new_dat3$factor),mean)
+names(new_dat4)[1] <- "factor"
+
+new_dat5 <- data.frame(cbind(y=c(new_dat4[1,2:289],new_dat4[2,2:289]),factor=rep(c("weekday","weekend"),each=288),x=1:288))
+new_dat5$y<-unlist(new_dat5$y)
+new_dat5$x<-unlist(new_dat5$x)*25/3
+new_dat5$factor<-unlist(new_dat5$factor)
+xyplot(y~x|factor,type="l",data=new_dat5,col="blue",layout=c(1,2),ylab="Number of steps",xlab="Interval")
+```
